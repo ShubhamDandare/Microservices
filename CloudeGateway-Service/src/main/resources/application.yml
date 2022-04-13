@@ -1,0 +1,74 @@
+
+server:
+  port: 8181
+
+eureka:
+  client:
+    fetch-registry: 'true'
+    register-with-eureka: 'true'
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+spring:
+  application:
+    name: CLOUDEGATEWAY-SERVICE
+  cloud:
+    gateway:
+      routes:
+        - id: HOSPITALMANAGEMENT-SERVICE
+          uri: lb://HOSPITALMANAGEMENT-SERVICE
+          predicates:
+            - Path=/Hospital/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: HOSPITALMANAGEMENT-SERVICE
+                fallbackuri: forward:/hospitalFallback
+                
+        - id: PATIENTMANAGEMENT-SERVICE
+          uri: lb://PATIENTMANAGEMENT-SERVICE
+          predicates:
+            - Path=/patient/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PATIENTMANAGEMENT-SERVICE
+                fallbackuri: forward:/patientFallback  
+                
+        - id: DOCTORMANAGEMENT-SERVICE
+          uri: lb://DOCTORMANAGEMENT-SERVICE
+          predicates:
+            - Path=/doctor/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: DOCTORMANAGEMENT-SERVICE
+                fallbackuri: forward:/doctorFallback            
+                
+        - id: HOSPITALRECORD-SERVICE
+          uri: lb://HOSPITALRECORD-SERVICE
+          predicates:
+            - Path=/Record/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: HOSPITALRECORD-SERVICE
+                fallbackuri: forward:/hospitalRecordFallback
+                
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+            
+            
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+                  
+                
